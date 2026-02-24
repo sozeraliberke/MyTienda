@@ -1,0 +1,28 @@
+{
+  "name": "mytienda",
+  "version": "1.0.0",
+  "description": "MyTienda, küçük ve orta ölçekli işletmelerin (KOBİ) e-ticaret pazaryerlerini ve fiziksel dükkanlarını tek bir merkezden yönetmelerini sağlayan, **Otomasyon, Hız ve Güvenlik** odaklı yeni nesil bir SaaS platformudur.",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sozeraliberke/MyTienda.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/sozeraliberke/MyTienda/issues"
+  },
+  "homepage": "https://github.com/sozeraliberke/MyTienda#readme",
+  "devDependencies": {
+    "eslint": "^10.0.2",
+    "prettier": "^3.8.1"
+  }
+}

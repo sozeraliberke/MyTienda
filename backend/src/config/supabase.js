@@ -1,0 +1,9 @@
+const { createClient } = require('@supabase/supabase-js');
+
+// Skeleton setup for Supabase (Will be populated later)
+const supabaseUrl = process.env.SUPABASE_URL || '';
+const supabaseKey = process.env.SUPABASE_ANON_KEY || '';
+
+const supabase = supabaseUrl && supabaseKey ? createClient(supabaseUrl, supabaseKey) : null;
+
+module.exports = supabase;
