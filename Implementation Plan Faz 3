@@ -1,0 +1,70 @@
+# Phase 3 Implementation Plan: Auth, Onboarding & Store Setup
+
+## Goal Description
+Build a premium, custom-designed authentication and onboarding flow for MyTienda. The plan covers three areas: (1) a database-level trigger to auto-create a `stores` row when a new user registers, (2) a beautiful Split-Screen Auth UI with Glassmorphism and micro-animations, and (3) Express.js auth middleware for token validation on the backend.
+
+## User Review Required
+
+> [!IMPORTANT]
+> **Next.js Migration Required.** The current `frontend` is built with Vite+React. The plan calls for Next.js (`middleware.ts`, `app/(auth)` routing, `createClientComponentClient`). Since migrating is a destructive, non-trivial change, this plan proposes creating a **new** `frontend` folder using `create-next-app`, replacing the current Vite setup.
+> All existing frontend files (`App.jsx`, `App.test.jsx`, `index.css`) will be ported over or recreated.
+
+> [!WARNING]
+> **shadcn/ui** requires Next.js 13+ (App Router). We will use shadcn/ui for base components (Input, Button, Label, Card), but the Auth page visual design will be fully custom with Framer Motion and Glassmorphism — NOT the default shadcn Auth template.
+
+---
+
+## Proposed Changes
+
+### Database — Auth Trigger
+
+#### [NEW] [20260226_auth_trigger.sql](file:///Users/berke/Desktop/Projects/MyTienda/supabase/migrations/20260226_auth_trigger.sql)
+- Create `handle_new_user()` PL/pgSQL function
+- On `auth.users` INSERT, auto-insert into `public.stores` with `subscription_plan = 'free_trial'`
+- Store name defaults to email prefix (e.g. "berke" from "berke@example.com")
+
+---
+
+### Frontend — Next.js Migration + Auth Pages
+
+#### [DELETE] [frontend (current Vite/React)](file:///Users/berke/Desktop/Projects/MyTienda/frontend)
+The current Vite setup will be fully replaced by Next.js App Router.
+
+#### [NEW] `frontend/` — Next.js App (created via `create-next-app`)
+- **Packages**: `@supabase/ssr`, `@supabase/supabase-js`, `framer-motion`, `react-hook-form`, `zod`, `lucide-react`, shadcn/ui components
+- **Pages**:
+  - `app/(auth)/login/page.tsx` — Split-screen login with Glassmorphism form
+  - `app/(auth)/register/page.tsx` — Same layout, registration form
+  - `app/onboarding/page.tsx` — 2-step wizard: (1) Store name, (2) Connect/Skip marketplace
+- **Middleware**: `middleware.ts` — Protect `/dashboard/**` routes, redirect to `/login`
+- **Onboarding Guard**: After login, check `stores.name` — if still "My Store" (default), redirect to `/onboarding` before allowing `/dashboard`
+
+---
+
+### Backend — Auth Middleware + Store Routes
+
+#### [NEW] [auth.middleware.js](file:///Users/berke/Desktop/Projects/MyTienda/backend/src/middlewares/auth.middleware.js)
+- Extract `Authorization: Bearer <token>` header
+- Validate token via `supabase.auth.getUser(token)`
+- Query `public.stores` by `owner_id = user.id` → attach `store` to `req.store`
+- On failure → return `401 Unauthorized`
+
+#### [NEW] [store.routes.js](file:///Users/berke/Desktop/Projects/MyTienda/backend/src/routes/store.routes.js)
+- `PUT /api/store/onboarding` — Update store name, logo URL, currency
+- Protected by `authMiddleware`
+
+#### [MODIFY] [index.js](file:///Users/berke/Desktop/Projects/MyTienda/backend/src/index.js)
+- Mount `store.routes.js` under `/api`
+
+---
+
+## Verification Plan
+
+### Automated Tests
+- `backend/tests/auth.test.js` — Test that unauthorized requests return `401`
+- `backend/tests/store.test.js` — Test `PUT /api/store/onboarding` with mock token
+
+### Manual Verification
+- Register new user in Supabase → confirm `stores` row auto-created via trigger
+- Try accessing `/dashboard` without login → confirm redirect to `/login`
+- Open browser to verify Split Screen, Glassmorphism form, and Framer Motion animations render correctly

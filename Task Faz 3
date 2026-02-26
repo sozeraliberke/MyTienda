@@ -1,0 +1,27 @@
+# MyTienda Phase 3: Auth & Onboarding
+
+## Database Agent
+- [ ] Create `supabase/migrations/20260226_auth_trigger.sql`
+- [ ] Write `handle_new_user()` PL/pgSQL function
+- [ ] Attach trigger to `auth.users` AFTER INSERT
+
+## Frontend Agent (Next.js)
+- [ ] Replace Vite frontend with Next.js App Router
+- [ ] Install packages (Supabase SSR, framer-motion, react-hook-form, zod, shadcn/ui)
+- [ ] Create `/login` page — Split Screen + Glassmorphism
+- [ ] Create `/register` page — same layout
+- [ ] Create `/onboarding` page — 2-step wizard
+- [ ] Setup `middleware.ts` to protect `/dashboard` routes
+- [ ] Add onboarding guard (redirect if store name is default)
+
+## Backend Agent
+- [ ] Create `src/middlewares/auth.middleware.js`
+- [ ] Create `src/routes/store.routes.js` with `PUT /api/store/onboarding`
+- [ ] Mount routes in `src/index.js`
+
+## Tester
+- [ ] Write `tests/auth.test.js` (401 on unauthorized)
+- [ ] Write `tests/store.test.js` (onboarding endpoint)
+
+## Team Lead
+- [ ] Write `docs/reports/faz3_auth_raporu.md`

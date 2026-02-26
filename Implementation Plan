@@ -1,0 +1,37 @@
+# Phase 2 Implementation Plan: Database Architecture and RLS
+
+## Goal Description
+To design the core relational database schema matching the "Omnichannel" and "Master Product" architecture of MyTienda. We will write the required Data Definition Language (DDL) code for Supabase PostgreSQL, which consists of creating tables, foreign key relationships, and enforcing Row Level Security (RLS) to ensure data multi-tenancy constraints are properly respected.
+
+## User Review Required
+> [!IMPORTANT]
+> Since we're dealing with the core architecture and RLS policies, please verify the following:
+> 1. We assume `auth.users` from Supabase is used for the `owner_id`.
+> 2. The RLS policies use a subquery like `(SELECT id FROM public.stores WHERE owner_id = auth.uid())` to check if a user owns the record through a foreign key. Let me know if you prefer joining methods or a custom `store_id` JWT claim approach for performance later.
+
+## Proposed Changes
+
+### Database Schema and Migrations
+We will create the core schema mapping the requirements out directly to SQL.
+
+#### [NEW] [schema.sql](file:///Users/berke/Desktop/Projects/MyTienda/supabase/schema.sql)
+We will create this file to house:
+- `stores`, `warehouses`, `integrations` (Core tables)
+- `products`, `variants`, `inventory`, `product_listings` (Product & Mapping tables)
+- `customers`, `orders`, `order_items` (CRM and Sales)
+- `automation_rules`, `automation_logs` (Automation)
+- RLS logic to strictly lock down each table per `store_id`.
+
+### Backend TypeScript Definitions
+We will create standard TypeScript type definitions or JSDoc typedefs so the backend agent has a unified interface to code against.
+
+#### [NEW] [database.js](file:///Users/berke/Desktop/Projects/MyTienda/backend/src/types/database.js)
+Will include full definitions matching the new DB tables to ensure autocomplete and type safety.
+
+## Verification Plan
+### Automated Tests
+- We'll create mock data SQL scripts (`mock_data.sql`).
+- We'll write Postgres unit tests or manually perform selections bypassing/enforcing RLS with different mock UUIDs to prove isolated multi-tenancy.
+
+### Manual Verification
+- Once the schema is created, we'll document it in the reporting phase so the backend developer knows exactly how to query it in future steps.
