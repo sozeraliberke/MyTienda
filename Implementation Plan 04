@@ -1,0 +1,100 @@
+# Phase 4 Implementation Plan: Trendyol Marketplace Integration
+
+## Goal Description
+Connect MyTienda to Trendyol's API using a secure, asynchronous architecture. API keys will be stored AES-256 encrypted. Product sync will run via a BullMQ queue to prevent server timeouts. All API endpoint URLs will be taken exclusively from `backend/docs/trendyol_endpoints.json`.
+
+## 🚨 Mandatory Red-Line Rules
+
+> [!CAUTION]
+> **AES-256:** Trendyol `api_key` and `api_secret` must NEVER be stored as plain text. They will be encrypted with AES-256 before writing to `public.integrations.api_credentials` and decrypted only at runtime.
+
+> [!CAUTION]
+> **BullMQ Queue:** Product sync must be triggered via a BullMQ job, NOT by a direct API call chain. Endpoint returns a `202 Accepted` immediately; the worker runs in the background with pagination (`?size=100&pageKey=...`).
+
+> [!CAUTION]
+> **Strict Endpoint Reference:** ALL Trendyol API URLs must be sourced directly from `backend/docs/trendyol_endpoints.json`. No agent may invent, guess, or use a previously known URL.
+
+---
+
+## Proposed Changes
+
+### Backend Agent
+
+#### [NEW] [encryption.js](file:///Users/berke/Desktop/Projects/MyTienda/backend/src/utils/encryption.js)
+- `encrypt(text)` → AES-256-CBC with IV, returns `iv:ciphertext` hex string
+- `decrypt(payload)` → Reverses the above
+- Key sourced from `process.env.ENCRYPTION_SECRET`
+
+---
+
+#### [NEW] [TrendyolService.js](file:///Users/berke/Desktop/Projects/MyTienda/backend/src/services/TrendyolService.js)
+- Constructor: accepts `{ sellerId, apiKey, apiSecret }`
+- Builds Basic Auth header: `base64(apiKey:apiSecret)`
+- Methods:
+  - `getProducts(pageKey)` → `GET /integration/ecgw/v2/{sellerId}/products?size=100&pageKey={pageKey}`
+  - `getOrders(status)` → `GET /integration/order/sellers/{sellerId}/orders`
+  - `cancelOrder(packageId, reasonCode)` → `PUT /integration/order/sellers/{sellerId}/shipment-packages/{packageId}/unsupplied`
+  - `splitOrder(packageId, body)` → `POST /integration/order/sellers/{sellerId}/shipment-packages/{packageId}/split`
+  - `getQuestions()` → `GET /integration/qna/sellers/{sellerId}/questions/filter?status=WAITING_FOR_ANSWER`
+  - `answerQuestion(questionId, answer)` → `POST /integration/qna/sellers/{sellerId}/questions/{id}/answers`
+  - `getAddresses()` → `GET /integration/sellers/{sellerId}/addresses` *(used for connection test)*
+
+#### [NEW] [TrendyolAdapter.js](file:///Users/berke/Desktop/Projects/MyTienda/backend/src/services/adapters/TrendyolAdapter.js)
+- `toProduct(trendyolItem)` → maps to `{ name, brand, attributes }`
+- `toVariant(trendyolItem)` → maps to `{ sku, barcode, price, compare_at_price }`
+- `toListing(trendyolItem, variantId, integrationId)` → maps to `{ remote_product_id, remote_sku, sync_status }`
+
+#### [NEW] [productSyncQueue.js](file:///Users/berke/Desktop/Projects/MyTienda/backend/src/queues/productSyncQueue.js)
+- BullMQ `Queue` named `product-sync` backed by `process.env.REDIS_URL`
+- Worker: loops `getProducts(pageKey)` while `hasNextPage`, upserts `products`, `variants`, `product_listings` per the barcode-based mapping rule
+
+#### [NEW] [integration.routes.js](file:///Users/berke/Desktop/Projects/MyTienda/backend/src/routes/integration.routes.js)
+- `POST /api/integrations/trendyol/connect` — Decrypt → test (getAddresses) → encrypt → save to DB
+- `POST /api/integrations/trendyol/sync-products` — Add BullMQ job → `202 Accepted`
+
+#### [NEW] [orders.routes.js](file:///Users/berke/Desktop/Projects/MyTienda/backend/src/routes/orders.routes.js)
+- `GET /api/orders`
+- `PUT /api/orders/:id/unsupplied` (reason codes: 500, 501, 502, 504, 505, 506)
+- `POST /api/orders/:id/split`
+
+#### [NEW] [qna.routes.js](file:///Users/berke/Desktop/Projects/MyTienda/backend/src/routes/qna.routes.js)
+- `GET /api/qna`
+- `POST /api/qna/:id/answer`
+
+#### [MODIFY] [index.js](file:///Users/berke/Desktop/Projects/MyTienda/backend/src/index.js)
+- Mount 3 new route files under `/api`
+
+---
+
+### Frontend Agent
+
+#### [NEW] `/settings/integrations` page
+- Trendyol API Key, Secret, Seller ID form
+- On save: calls `POST /api/integrations/trendyol/connect`
+- Shows "Bağlandı ✓" badge on success
+
+#### [NEW] `/products` page
+- Shadcn/UI DataTable: Image | Name | Barcode | Stock | Price | Marketplace Status badge
+- "Pazaryerinden Eşitle" button → calls `POST /api/integrations/trendyol/sync-products`
+
+#### [NEW] `/orders` page
+- Order list with status badges
+- "Tedarik Edilemedi" modal: dropdown with Trendyol cancel reason codes (500→506)
+- "Paketi Böl" button
+
+#### [NEW] `/crm/questions` page
+- Split layout: question list (left) + chat window (right)
+- Text input + send button → calls `POST /api/qna/:id/answer`
+
+---
+
+## Verification Plan
+
+### Automated Tests
+- `tests/encryption.test.js` — encrypt/decrypt round-trip
+- `tests/integration.test.js` — mock Trendyol API, test connect + sync-products endpoints
+
+### Manual Verification
+- Save Trendyol credentials → check `integrations.api_credentials` in Supabase is unreadable ciphertext
+- Trigger product sync → verify BullMQ job created and products appear in DB
+- Cancel an order → verify correct reason code sent to Trendyol API URL from `trendyol_endpoints.json`

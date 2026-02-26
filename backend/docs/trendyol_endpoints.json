@@ -1,0 +1,182 @@
+{
+    "Base_URL": "https://apigw.trendyol.com",
+    "Authentication": "Basic Auth (Satıcı API Key ve API Secret base64 encode edilerek gönderilir)",
+    "Product_Lookup_and_Attributes": [
+        {
+            "name": "Kategoriye Göre Zorunlu Özellik Listesi",
+            "method": "GET",
+            "endpoint": "https://apigw.trendyol.com/integration/ecgw/v1/{sellerId}/lookup/product-categories/{categoryId}/attributes",
+            "description": "Kullanıcı MyTienda'da kategori seçtiğinde, o kategori için Trendyol'un zorunlu tuttuğu (renk, beden vs.) tüm özellikleri çeker."
+        },
+        {
+            "name": "Barkod ile Kategori Bilgisi Listeleme",
+            "method": "POST",
+            "endpoint": "https://apigw.trendyol.com/integration/ecgw/v1/{sellerId}/lookup/product-categories/by-barcodes",
+            "description": "Kullanıcı hazır bir ürünün barkodunu okuttuğunda, o ürünün Trendyol'daki kategori ve marka bilgilerini otomatik eşleştirmek için kullanılır."
+        },
+        {
+            "name": "Marka Arama (Brand List)",
+            "method": "GET",
+            "endpoint": "https://apigw.trendyol.com/integration/product/brands/by-name?name={brand-name}",
+            "description": "Kullanıcı ürün eklerken marka arattığında Trendyol marka ID'sini anlık olarak bulmak için kullanılır."
+        },
+        {
+            "name": "Menşei Listesi",
+            "method": "GET",
+            "endpoint": "https://apigw.trendyol.com/integration/ecgw/v1/{sellerId}/lookup/origins"
+        },
+        {
+            "name": "Materyal Bileşenleri",
+            "method": "GET",
+            "endpoint": "https://apigw.trendyol.com/integration/ecgw/v1/{sellerId}/lookup/compositions"
+        },
+        {
+            "name": "Yıkama Talimatları",
+            "method": "GET",
+            "endpoint": "https://apigw.trendyol.com/integration/ecgw/v1/{sellerId}/lookup/care-instructions"
+        }
+    ],
+    "Product_Integration": [
+        {
+            "name": "Mevcut Ürünleri Listeleme (İçeri Alma - V2)",
+            "method": "GET",
+            "endpoint": "https://apigw.trendyol.com/integration/ecgw/v2/{sellerId}/products",
+            "query_parameters": "?size=100&pageKey={pageKey}",
+            "description": "Satıcı kayıt olduğunda var olan tüm ürünlerini içeri çekmek için kullanılır."
+        },
+        {
+            "name": "Yeni Ürün Oluşturma (V2)",
+            "method": "POST",
+            "endpoint": "https://apigw.trendyol.com/integration/ecgw/v2/{sellerId}/products"
+        }
+    ],
+    "Stock_Integration": [
+        {
+            "name": "Ürün Stok Bilgisi Güncelleme",
+            "method": "POST",
+            "endpoint": "https://apigw.trendyol.com/integration/inventory/sellers/{sellerId}/products/price-and-inventory"
+        }
+    ],
+    "Price_Integration": [
+        {
+            "name": "Fiyat Güncelleme",
+            "method": "POST",
+            "endpoint": "https://apigw.trendyol.com/integration/inventory/sellers/{sellerId}/products/price-and-inventory"
+        }
+    ],
+    "Batch_Request_Integration": [
+        {
+            "name": "Batch ID ile İşlem Sonucu Sorgulama",
+            "method": "GET",
+            "endpoint": "https://apigw.trendyol.com/integration/product/sellers/{sellerId}/products/batch-requests/{batchRequestId}"
+        }
+    ],
+    "Order_Integration": [
+        {
+            "name": "Sipariş Paketlerini Çekme",
+            "method": "GET",
+            "endpoint": "https://apigw.trendyol.com/integration/order/sellers/{sellerId}/orders",
+            "query_parameters": "?status=Awaiting&size=200&orderByField=CreatedDate&orderByDirection=DESC"
+        },
+        {
+            "name": "Sipariş Paketlerini Bölme (Split Shipment)",
+            "method": "POST",
+            "endpoint": "https://apigw.trendyol.com/integration/order/sellers/{sellerId}/shipment-packages/{packageId}/split",
+            "description": "Kısmi gönderim yapılacağı zaman, stokta olan ürünleri ayrı bir pakete bölmek için kullanılır."
+        },
+        {
+            "name": "Tedarik Edememe Bildirimi (Unsupplied / İptal)",
+            "method": "PUT",
+            "endpoint": "https://apigw.trendyol.com/integration/order/sellers/{sellerId}/shipment-packages/{packageId}/unsupplied",
+            "description": "Stokta olmayan, defolu veya hatalı fiyatlı ürünler için Trendyol'un sebep kodlarıyla (500, 501, 502) siparişi iptal eder."
+        },
+        {
+            "name": "Paket Statü Bildirimi",
+            "method": "PUT",
+            "endpoint": "https://apigw.trendyol.com/integration/order/sellers/{sellerId}/shipment-packages/{packageId}"
+        },
+        {
+            "name": "Paket Kargo Firması Değiştirme",
+            "method": "PUT",
+            "endpoint": "https://apigw.trendyol.com/integration/order/sellers/{sellerId}/shipment-packages/{packageId}/cargo-providers"
+        }
+    ],
+    "Return_Integration": [
+        {
+            "name": "İadesi Oluşturulan Siparişleri Çekme",
+            "method": "GET",
+            "endpoint": "https://apigw.trendyol.com/integration/order/sellers/{sellerId}/claims"
+        },
+        {
+            "name": "İade Siparişleri Onaylama",
+            "method": "PUT",
+            "endpoint": "https://apigw.trendyol.com/integration/order/sellers/{sellerId}/claims/{claimId}/items/approve"
+        },
+        {
+            "name": "İade Red Sebeplerini Çekme",
+            "method": "GET",
+            "endpoint": "https://apigw.trendyol.com/integration/order/claim-issue-reasons"
+        },
+        {
+            "name": "İade Ret Talebi Oluşturma",
+            "method": "POST",
+            "endpoint": "https://apigw.trendyol.com/integration/order/sellers/{sellerId}/claims/{claimId}/issue"
+        }
+    ],
+    "QnA_Integration": [
+        {
+            "name": "Müşteri Sorularını Çekme",
+            "method": "GET",
+            "endpoint": "https://apigw.trendyol.com/integration/qna/sellers/{sellerId}/questions/filter?status=WAITING_FOR_ANSWER",
+            "description": "Cevap bekleyen müşteri sorularını panele çekerek MyTienda'yı bir CRM aracına dönüştürür."
+        },
+        {
+            "name": "Müşteri Sorularını Cevaplama",
+            "method": "POST",
+            "endpoint": "https://apigw.trendyol.com/integration/qna/sellers/{sellerId}/questions/{id}/answers",
+            "description": "Panel üzerinden yazılan cevabı anında Trendyol müşterisine iletir."
+        }
+    ],
+    "Operation_Integration": [
+        {
+            "name": "İade ve Sevkiyat Adres Bilgileri (Addresses)",
+            "method": "GET",
+            "endpoint": "https://apigw.trendyol.com/integration/sellers/{sellerId}/addresses",
+            "description": "Kargo barkodu basarken veya ürün yüklerken zorunlu olarak gönderilmesi gereken 'Shipment' ve 'Returning' adres ID'lerini çeker."
+        },
+        {
+            "name": "Ortak Etiket Barkod Talebi (ZPL)",
+            "method": "POST",
+            "endpoint": "https://apigw.trendyol.com/integration/sellers/{sellerId}/common-label/{parcelUniqueId}"
+        },
+        {
+            "name": "Ortak Etiket Barkodunu Alma",
+            "method": "GET",
+            "endpoint": "https://apigw.trendyol.com/integration/sellers/{sellerId}/common-label/{parcelUniqueId}"
+        },
+        {
+            "name": "Fatura Linki Gönderme (E-Fatura)",
+            "method": "POST",
+            "endpoint": "https://apigw.trendyol.com/integration/sellers/{sellerId}/seller-invoice-links"
+        }
+    ],
+    "Finance_Integration": [
+        {
+            "name": "Cari Hesap Ekstresi (Settlements)",
+            "method": "GET",
+            "endpoint": "https://apigw.trendyol.com/integration/finance/che/sellers/{sellerId}/settlements"
+        },
+        {
+            "name": "Kargo Faturası Detayları",
+            "method": "GET",
+            "endpoint": "https://apigw.trendyol.com/integration/finance/che/sellers/{sellerId}/cargo-invoice/{invoiceSerialNumber}/items"
+        }
+    ],
+    "Webhook_Automation": [
+        {
+            "name": "Webhook Yaratma (Otomasyon Başlatma)",
+            "method": "POST",
+            "endpoint": "https://apigw.trendyol.com/integration/webhook/sellers/{sellerId}/webhooks"
+        }
+    ]
+}
