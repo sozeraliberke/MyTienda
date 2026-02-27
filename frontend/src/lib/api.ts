@@ -1,3 +1,5 @@
+import { createClient } from '@/lib/supabase/client';
+
 /**
  * Shared API client for all frontend → backend fetch calls.
  * Reads base URL from NEXT_PUBLIC_API_URL environment variable.
@@ -22,8 +24,19 @@ export async function apiRequest<T = unknown>(
         'Content-Type': 'application/json',
     };
 
-    if (token) {
-        headers['Authorization'] = `Bearer ${token}`;
+    let authToken = token;
+
+    if (!authToken) {
+        // Automatically fetch the current user's session from Supabase
+        const supabase = createClient();
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.access_token) {
+            authToken = session.access_token;
+        }
+    }
+
+    if (authToken) {
+        headers['Authorization'] = `Bearer ${authToken}`;
     }
 
     const res = await fetch(`${BASE_URL}${path}`, {
