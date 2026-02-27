@@ -20,6 +20,7 @@ class TrendyolAdapter {
                 trendyol_brand_id: item.brandId,
                 trendyol_category_id: item.categoryId,
                 trendyol_status: item.approved ? 'approved' : item.archived ? 'archived' : 'rejected',
+                compare_at_price: parseFloat(item.listPrice) || null, // Stored safely in JSONB
                 ...(item.attributes || {}),
             },
         };
@@ -28,14 +29,13 @@ class TrendyolAdapter {
     /**
      * Maps a Trendyol product item to a MyTienda `variants` row.
      * @param {Object} item - Raw Trendyol product item
-     * @returns {{ sku, barcode, price, compare_at_price, stock_code }}
+     * @returns {{ sku, barcode, price, stock_code }}
      */
     toVariant(item) {
         return {
             sku: item.stockCode || item.barcode || `TY-${item.id}`,
             barcode: item.barcode || null,
             price: parseFloat(item.salePrice) || 0,
-            compare_at_price: parseFloat(item.listPrice) || null,
             stock_code: item.stockCode || null,
         };
     }
