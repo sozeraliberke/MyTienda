@@ -1,6 +1,7 @@
 'use client';
 
 import { motion, AnimatePresence } from 'framer-motion';
+import { apiRequest } from '@/lib/api';
 import { useState } from 'react';
 import { RefreshCw, CheckCircle, XCircle, Clock } from 'lucide-react';
 
@@ -34,11 +35,10 @@ export default function ProductsPage() {
         setSyncing(true);
         setSyncMsg('');
         try {
-            const res = await fetch('/api/integrations/trendyol/sync-products', { method: 'POST' });
-            const data = await res.json();
-            setSyncMsg(res.status === 202 ? '✓ Senkronizasyon kuyruğa alındı. Arka planda devam ediyor...' : data.error);
-        } catch {
-            setSyncMsg('Senkronizasyon başlatılamadı.');
+            await apiRequest('/integrations/trendyol/sync-products', { method: 'POST' });
+            setSyncMsg('✓ Senkronizasyon kuyruğa alındı. Arka planda devam ediyor...');
+        } catch (err: unknown) {
+            setSyncMsg(err instanceof Error ? err.message : 'Senkronizasyon başlatılamadı.');
         } finally {
             setSyncing(false);
         }

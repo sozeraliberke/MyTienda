@@ -12,8 +12,27 @@ const qnaRoutes = require('./routes/qna.routes');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-app.use(cors());
+// Explicit CORS allowlist — avoids 'Unexpected token <' on wrong-port fetch
+const allowedOrigins = [
+    'http://localhost:3000',
+    'http://localhost:3001',
+    process.env.FRONTEND_URL, // production URL e.g. https://mytienda.vercel.app
+].filter(Boolean);
+
+app.use(cors({
+    origin: (origin, callback) => {
+        // Allow same-origin / server-to-server requests (no origin header)
+        if (!origin || allowedOrigins.includes(origin)) {
+            callback(null, true);
+        } else {
+            callback(new Error(`CORS: origin '${origin}' is not allowed.`));
+        }
+    },
+    credentials: true,
+}));
+
 app.use(express.json());
+
 
 // Routes
 app.use('/api', healthRoutes);

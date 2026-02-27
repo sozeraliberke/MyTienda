@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import { apiRequest } from '@/lib/api';
 import { useState } from 'react';
 import { CheckCircle, Plug, AlertCircle } from 'lucide-react';
 
@@ -26,15 +27,7 @@ export default function IntegrationsPage() {
     const onSubmit = async (data: FormData) => {
         setStatus('loading');
         try {
-            const res = await fetch('/api/integrations/trendyol/connect', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(data),
-            });
-            if (!res.ok) {
-                const body = await res.json();
-                throw new Error(body.error || 'Bağlantı başarısız.');
-            }
+            await apiRequest('/integrations/trendyol/connect', { method: 'POST', body: data });
             setStatus('success');
         } catch (err: unknown) {
             setErrMsg(err instanceof Error ? err.message : 'Bir hata oluştu.');

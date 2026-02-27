@@ -3,6 +3,7 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { useState } from 'react';
 import { Send, MessageCircle } from 'lucide-react';
+import { apiRequest } from '@/lib/api';
 
 type Question = { id: string; product: string; question: string; askedAt: string };
 
@@ -21,10 +22,9 @@ export default function QnaPage() {
         if (!selected || !answer.trim()) return;
         setSending(true);
         try {
-            await fetch(`/api/qna/${selected.id}/answer`, {
+            await apiRequest(`/qna/${selected.id}/answer`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ answer }),
+                body: { answer },
             });
             setSent(prev => ({ ...prev, [selected.id]: true }));
             setAnswer('');

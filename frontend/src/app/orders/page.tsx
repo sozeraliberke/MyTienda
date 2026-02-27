@@ -1,6 +1,7 @@
 'use client';
 
 import { motion, AnimatePresence } from 'framer-motion';
+import { apiRequest } from '@/lib/api';
 import { useState } from 'react';
 import { XCircle, Scissors, AlertTriangle } from 'lucide-react';
 
@@ -38,13 +39,14 @@ export default function OrdersPage() {
         if (!selectedOrder) return;
         setSubmitting(true);
         try {
-            const res = await fetch(`/api/orders/${selectedOrder.id}/unsupplied`, {
+            await apiRequest(`/orders/${selectedOrder.id}/unsupplied`, {
                 method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ reasonCode, lines: [{ lineId: 1, quantity: 1 }] }),
+                body: { reasonCode, lines: [{ lineId: 1, quantity: 1 }] },
             });
-            setResult(res.ok ? '✓ Sipariş başarıyla iptal edildi.' : '✗ Hata oluştu.');
-        } catch { setResult('✗ İstek gönderilemedi.'); }
+            setResult('✓ Sipariş başarıyla iptal edildi.');
+        } catch (err: unknown) {
+            setResult(`✗ ${err instanceof Error ? err.message : 'İstek gönderilemedi.'}`);
+        }
         setSubmitting(false);
     };
 
