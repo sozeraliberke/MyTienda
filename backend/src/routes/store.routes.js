@@ -17,10 +17,7 @@ router.put('/store/onboarding', authMiddleware, async (req, res) => {
         return res.status(400).json({ error: 'Store name is required.' });
     }
 
-    const supabase = createClient(
-        process.env.SUPABASE_URL,
-        process.env.SUPABASE_ANON_KEY
-    );
+    const supabase = req.supabase;
 
     const { data, error } = await supabase
         .from('stores')

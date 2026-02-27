@@ -1,3 +1,4 @@
+require('dotenv').config();
 const { Queue, Worker } = require('bullmq');
 const IORedis = require('ioredis');
 const { createClient } = require('@supabase/supabase-js');
@@ -5,9 +6,18 @@ const TrendyolService = require('../services/TrendyolService');
 const TrendyolAdapter = require('../services/adapters/TrendyolAdapter');
 const { decrypt } = require('../utils/encryption');
 
-// Redis connection (Upstash or local Redis — configured via REDIS_URL in .env)
-const connection = new IORedis(process.env.REDIS_URL || 'redis://localhost:6379', {
+// Fail fast if REDIS_URL is not configured — no silent localhost fallback
+if (!process.env.REDIS_URL) {
+    throw new Error(
+        '[productSyncQueue] REDIS_URL is not set in your .env file. ' +
+        'Please add it (e.g. Upstash Redis URL) before starting the server.'
+    );
+}
+
+// Redis connection — sourced exclusively from REDIS_URL in .env
+const connection = new IORedis(process.env.REDIS_URL, {
     maxRetriesPerRequest: null,
+    enableReadyCheck: false,   // Required for some Upstash/TLS setups
 });
 
 // BullMQ Queue — jobs are added by the /sync-products endpoint
@@ -23,7 +33,11 @@ const productSyncWorker = new Worker(
         const apiSecret = decrypt(encryptedApiSecret);
 
         const trendyol = new TrendyolService({ sellerId, apiKey, apiSecret });
-        const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_ANON_KEY);
+        // Background workers need the Service Role Key to bypass RLS
+        const supabase = createClient(
+            process.env.SUPABASE_URL,
+            process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY
+        );
 
         let pageKey = null;
         let pageCount = 0;

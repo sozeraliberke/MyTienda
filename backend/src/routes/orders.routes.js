@@ -7,8 +7,7 @@ const { decrypt } = require('../utils/encryption');
 const router = express.Router();
 
 // Helper: get TrendyolService instance for the authenticated store
-async function getTrendyol(storeId) {
-    const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_ANON_KEY);
+async function getTrendyol(supabase, storeId) {
     const { data: integration, error } = await supabase
         .from('integrations')
         .select('api_credentials')
@@ -28,7 +27,7 @@ async function getTrendyol(storeId) {
  */
 router.get('/orders', authMiddleware, async (req, res) => {
     try {
-        const trendyol = await getTrendyol(req.store.id);
+        const trendyol = await getTrendyol(req.supabase, req.store.id);
         const data = await trendyol.getOrders(req.query.status || 'Awaiting');
         return res.status(200).json(data);
     } catch (err) {
@@ -54,7 +53,7 @@ router.put('/orders/:id/unsupplied', authMiddleware, async (req, res) => {
     }
 
     try {
-        const trendyol = await getTrendyol(req.store.id);
+        const trendyol = await getTrendyol(req.supabase, req.store.id);
         const data = await trendyol.cancelOrder(req.params.id, reasonCode, lines);
         return res.status(200).json(data);
     } catch (err) {
@@ -68,7 +67,7 @@ router.put('/orders/:id/unsupplied', authMiddleware, async (req, res) => {
  */
 router.post('/orders/:id/split', authMiddleware, async (req, res) => {
     try {
-        const trendyol = await getTrendyol(req.store.id);
+        const trendyol = await getTrendyol(req.supabase, req.store.id);
         const data = await trendyol.splitOrder(req.params.id, req.body);
         return res.status(200).json(data);
     } catch (err) {

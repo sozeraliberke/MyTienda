@@ -6,8 +6,7 @@ const { decrypt } = require('../utils/encryption');
 
 const router = express.Router();
 
-async function getTrendyol(storeId) {
-    const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_ANON_KEY);
+async function getTrendyol(supabase, storeId) {
     const { data: integration, error } = await supabase
         .from('integrations')
         .select('api_credentials')
@@ -26,7 +25,7 @@ async function getTrendyol(storeId) {
  */
 router.get('/qna', authMiddleware, async (req, res) => {
     try {
-        const trendyol = await getTrendyol(req.store.id);
+        const trendyol = await getTrendyol(req.supabase, req.store.id);
         const data = await trendyol.getQuestions();
         return res.status(200).json(data);
     } catch (err) {
@@ -45,7 +44,7 @@ router.post('/qna/:id/answer', authMiddleware, async (req, res) => {
     }
 
     try {
-        const trendyol = await getTrendyol(req.store.id);
+        const trendyol = await getTrendyol(req.supabase, req.store.id);
         const data = await trendyol.answerQuestion(req.params.id, answer);
         return res.status(200).json(data);
     } catch (err) {

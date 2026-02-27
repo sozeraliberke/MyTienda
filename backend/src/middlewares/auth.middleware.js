@@ -14,21 +14,28 @@ async function authMiddleware(req, res, next) {
 
     const token = authHeader.split(' ')[1];
 
-    // Create a Supabase client using the service role for server-side validation
-    const supabaseAdmin = createClient(
+    // Create a Supabase client acting as the authenticated user
+    const supabase = createClient(
         process.env.SUPABASE_URL,
-        process.env.SUPABASE_ANON_KEY
+        process.env.SUPABASE_ANON_KEY,
+        {
+            global: {
+                headers: {
+                    Authorization: `Bearer ${token}`
+                }
+            }
+        }
     );
 
     // Validate the JWT token
-    const { data: { user }, error } = await supabaseAdmin.auth.getUser(token);
+    const { data: { user }, error } = await supabase.auth.getUser();
 
     if (error || !user) {
         return res.status(401).json({ error: 'Unauthorized: Invalid or expired token.' });
     }
 
-    // Find the user's store
-    const { data: store, error: storeError } = await supabaseAdmin
+    // Find the user's store (now respects RLS because we are authenticated!)
+    const { data: store, error: storeError } = await supabase
         .from('stores')
         .select('*')
         .eq('owner_id', user.id)
@@ -38,9 +45,10 @@ async function authMiddleware(req, res, next) {
         return res.status(403).json({ error: 'Forbidden: No store associated with this user.' });
     }
 
-    // Attach user and store to request object
+    // Attach user, store, AND the authenticated Supabase client to the request
     req.user = user;
     req.store = store;
+    req.supabase = supabase;
 
     next();
 }

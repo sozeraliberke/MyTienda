@@ -31,7 +31,7 @@ router.post('/integrations/trendyol/connect', authMiddleware, async (req, res) =
             apiSecret: encrypt(apiSecret),
         };
 
-        const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_ANON_KEY);
+        const supabase = req.supabase;
 
         const { data, error } = await supabase
             .from('integrations')
@@ -61,7 +61,7 @@ router.post('/integrations/trendyol/connect', authMiddleware, async (req, res) =
  */
 router.post('/integrations/trendyol/sync-products', authMiddleware, async (req, res) => {
     const storeId = req.store.id;
-    const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_ANON_KEY);
+    const supabase = req.supabase;
 
     const { data: integration, error } = await supabase
         .from('integrations')
